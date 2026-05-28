@@ -15,24 +15,6 @@ body {
     color: #e0e0e0;
 }
 
-.menu-btn {
-    font-size: 28px;
-    background: none;
-    border: none;
-    color: white;
-    width: auto;
-    float: right;
-}
-
-.panel {
-    display: none;
-    margin-top: 20px;
-}
-
-.active {
-    display: block;
-}
-
 input, button {
     width: 100%;
     padding: 15px;
@@ -49,14 +31,16 @@ button:hover {
     background: #2a2a2a;
 }
 
-.route-btn {
-    margin: 5px 0;
+.menu-btn {
+    width: auto;
+    float: right;
+    font-size: 24px;
+    background: none;
+    border: none;
 }
 
-#summe {
-    font-size: 30px;
-    font-weight: bold;
-    margin: 20px 0;
+#menu {
+    display: none;
 }
 
 .route-item {
@@ -67,6 +51,23 @@ button:hover {
 .route-item button {
     flex: 1;
 }
+
+#summe {
+    font-size: 34px;
+    font-weight: bold;
+    margin: 20px 0;
+}
+
+.entry {
+    background: #1e1e1e;
+    padding: 12px;
+    border-radius: 10px;
+    margin: 8px 0;
+}
+
+.hidden {
+    display: none;
+}
 </style>
 </head>
 
@@ -75,31 +76,25 @@ button:hover {
 <button class="menu-btn" onclick="toggleMenu()">☰</button>
 <h1>Kilometer Tracker</h1>
 
-<div id="menu" class="panel">
-    <button onclick="showPanel('dashboard')">Dashboard</button>
-    <button onclick="showPanel('routen')">Standard Routen</button>
-    <button onclick="showPanel('verwalten')">Routen verwalten</button>
+<div id="menu">
+    <button onclick="toggleRoutenVerwaltung()">Routen verwalten</button>
 </div>
 
-<div id="dashboard" class="active">
+<h2>Standardrouten</h2>
+<div id="routeButtons"></div>
 
-    <input type="number" id="km" placeholder="Kilometer eingeben">
-    <button onclick="hinzufuegen()">Hinzufügen</button>
+<h2>Manuelle Eingabe</h2>
+<input type="number" id="km" placeholder="Kilometer eingeben">
+<button onclick="hinzufuegen()">Hinzufügen</button>
 
-    <div id="summe">0 km</div>
+<div id="summe">0 km</div>
 
-    <ul id="liste"></ul>
+<h2>Fahrten</h2>
+<div id="eintragsListe"></div>
 
-    <button onclick="resetten()">Reset nach Tanken</button>
+<button onclick="resetten()">Reset nach Tanken</button>
 
-</div>
-
-<div id="routen" class="panel">
-    <h2>Standard Routen</h2>
-    <div id="routeButtons"></div>
-</div>
-
-<div id="verwalten" class="panel">
+<div id="routenVerwaltung" class="hidden">
     <h2>Neue Route</h2>
 
     <input type="text" id="routeName" placeholder="Routenname">
@@ -132,29 +127,52 @@ function speichern() {
     renderRouten();
 }
 
+function aktuellesDatum() {
+    return new Date().toLocaleDateString("de-DE");
+}
+
 function hinzufuegen() {
     const km = Number(document.getElementById("km").value);
-    if (km > 0) {
-        daten.push(km);
+
+    if(km > 0){
+        daten.push({
+            km: km,
+            datum: aktuellesDatum()
+        });
+
         document.getElementById("km").value = "";
         speichern();
     }
 }
 
-function addiere(km) {
-    daten.push(km);
+function addiere(km, routeName) {
+    daten.push({
+        km: km,
+        datum: aktuellesDatum(),
+        route: routeName
+    });
+
+    speichern();
+}
+
+function eintragLoeschen(index){
+    daten.splice(index,1);
     speichern();
 }
 
 function anzeigen() {
-    let summe = daten.reduce((a,b)=>a+b,0);
+    let summe = daten.reduce((a,b)=>a+b.km,0);
     document.getElementById("summe").innerText = summe + " km";
 
-    let liste = document.getElementById("liste");
+    let liste = document.getElementById("eintragsListe");
     liste.innerHTML = "";
 
-    daten.forEach(km => {
-        liste.innerHTML += `<li>${km} km</li>`;
+    daten.forEach((eintrag,index)=>{
+        liste.innerHTML += `
+        <div class="entry">
+            ${eintrag.datum} | ${eintrag.route || "Manuell"} | ${eintrag.km} km
+            <button onclick="eintragLoeschen(${index})">Löschen</button>
+        </div>`;
     });
 }
 
@@ -169,9 +187,10 @@ function routeHinzufuegen() {
 
     if(name && km > 0){
         routen.push({name, km});
+        speichern();
+
         document.getElementById("routeName").value = "";
         document.getElementById("routeKm").value = "";
-        speichern();
     }
 }
 
@@ -189,7 +208,7 @@ function renderRouten() {
 
     routen.forEach((route,index)=>{
         buttons.innerHTML +=
-            `<button class="route-btn" onclick="addiere(${route.km})">${route.name} (+${route.km} km)</button>`;
+            `<button onclick="addiere(${route.km}, '${route.name}')">${route.name} (+${route.km} km)</button>`;
 
         liste.innerHTML +=
             `<div class="route-item">
@@ -204,9 +223,10 @@ function toggleMenu() {
     menu.style.display = menu.style.display === "block" ? "none" : "block";
 }
 
-function showPanel(id) {
-    document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
+function toggleRoutenVerwaltung() {
+    const panel = document.getElementById("routenVerwaltung");
+    panel.classList.toggle("hidden");
+    document.getElementById("menu").style.display = "none";
 }
 
 anzeigen();
