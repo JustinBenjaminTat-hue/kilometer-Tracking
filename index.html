@@ -109,16 +109,7 @@ button:hover {
 <script>
 let daten = JSON.parse(localStorage.getItem("kmDaten")) || [];
 
-let routen = JSON.parse(localStorage.getItem("routen")) || [
-    {name:"Zuhause → Uni", km:44},
-    {name:"Uni → Zuhause", km:43},
-    {name:"Zuhause → Laura", km:16},
-    {name:"Laura → Zuhause", km:16},
-    {name:"Zuhause → Bahnhof", km:1.7},
-    {name:"Bahnhof → Zuhause", km:1.7},
-    {name:"Zuhause → Malte", km:39},
-    {name:"Malte → Zuhause", km:39}
-];
+let routen = JSON.parse(localStorage.getItem("routen")) || [];
 
 function speichern() {
     localStorage.setItem("kmDaten", JSON.stringify(daten));
